@@ -186,3 +186,8 @@
   color: var(--ink-muted);
   padding: 10px 0;
 }
+.hint {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  margin: 10px 12px 0;
+}

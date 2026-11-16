@@ -17,6 +17,7 @@
 | M5 等价类合并 | 生成合并簇，核对代表元与金额 | POST /api/clusters | `app/modules/m5_clusters/unionfind.py` `app/modules/m5_clusters/represent.py` `app/modules/m5_clusters/allocate.py` `app/modules/m5_clusters/service.py` `app/modules/m5_clusters/handler.py` | `tests/test_clusters.py` |
 | M6 复核批次 | 判定边界对，看引用异常与批次历史 | POST /api/reviews/{pair_id}/decision | `app/modules/m6_reviews/queue.py` `app/modules/m6_reviews/history.py` `app/modules/m6_reviews/version.py` `app/modules/m6_reviews/service.py` `app/modules/m6_reviews/handler.py` | `tests/test_reviews.py` |
 | M7 主数据导出 | 下载主数据、成员分摊、隔离区与运行清单 | GET /api/export/master.csv | `app/modules/m7_export/master_out.py` `app/modules/m7_export/quarantine_out.py` `app/modules/m7_export/manifest_out.py` `app/modules/m7_export/service.py` `app/modules/m7_export/handler.py` | `tests/test_export.py` |
+| M8 付款边界 | 看可付/暂缓分栏与暂缓原因，判定后自动解除 | GET /api/payment | `app/modules/m8_payment/service.py` `app/modules/m8_payment/payment_out.py` `app/modules/m8_payment/handler.py` | `tests/test_payment.py` |
 
 ## 陷阱登记
 
@@ -41,6 +42,8 @@
 - 记录：采信行数 = 采纳 + 隔离 + 同号冲突；采纳 = 主体数 + 合并成员数
 - 金额：Σ采纳记录金额 = Σ簇金额 = Σ成员分摊，全部 Decimal 逐分相等
 - 候选对：候选总数 = 自动 + 复核 + 拒绝；复核决定写入后簇与金额立即重算
+- 付款边界：总额 = 可付 + 暂缓；簇非可付即暂缓，同一成员金额只在一边出现一次；
+  页面、复核接口与 payment.csv、manifest.json 共用同一 boundary 计算结果
 - 空态：仅表头 / 全空行 / 正常文件三种结论分别记录在文件诊断里
 
 ## 已知不覆盖

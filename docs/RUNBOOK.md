@@ -24,13 +24,17 @@ docker compose up -d --build
 - 批次号由输入摘要（按文件名排序的 sha256 拼接）与规则版本共同决定，同一批文件得到同一个 `run_id`；
   命中已有批次时直接复用结果，不新增记录。
 - 复核决定写入后，簇与金额会立即重算，不需要手工触发。
+- 付款边界随簇一起重算：待核对全部判定后 `H_PENDING_REVIEW` 暂缓自动解除，
+  同一批文件重跑后可付与暂缓金额保持一致。
 
 ## 常用请求
 
 ```bash
 curl -s -X POST http://127.0.0.1:18205/api/suppliers/import -H 'Content-Type: application/json' -d '{}'
 curl -s http://127.0.0.1:18205/api/reconcile
+curl -s http://127.0.0.1:18205/api/payment
 curl -s http://127.0.0.1:18205/api/export/master.csv -o master.csv
+curl -s http://127.0.0.1:18205/api/export/payment.csv -o payment.csv
 curl -s http://127.0.0.1:18205/api/export/manifest.json -o manifest.json
 ```
 

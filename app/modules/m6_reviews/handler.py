@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from ..m1_intake import service as intake_service
+from ..m8_payment import service as payment_service
 from . import service
 
 router = APIRouter(prefix="/api", tags=["m6-reviews"])
@@ -21,6 +22,7 @@ def review_queue(limit: int = 60):
     run = intake_service.ensure_run()
     items = service.queue_items(run["run_id"])
     return {"run_id": run["run_id"], "stats": service.queue_stats(run["run_id"]),
+            "payment": payment_service.summary(run["run_id"]),
             "total": len(items), "items": items[:limit]}
 
 
@@ -42,7 +44,8 @@ def submit_decision(pair_id: str, body: DecisionRequest):
     record = service.decide(run["run_id"], pair_id, body.decision, body.expected_version,
                             body.operator)
     return {"run_id": run["run_id"], "decision": record,
-            "queue": service.queue_stats(run["run_id"])}
+            "queue": service.queue_stats(run["run_id"]),
+            "payment": payment_service.summary(run["run_id"])}
 
 
 @router.get("/batches")

@@ -5,9 +5,11 @@
     <h1 class="panel-title">主数据导出</h1>
     <div class="panel-num">{{ ledger.subjects }} 个主体 · {{ ledger.amount_clusters|money }} 元</div>
   </div>
+  <p class="hint">付款边界：可付 {{ payment.amount_payable|money }} 元（{{ payment.payable_clusters }} 个主体） · 暂缓 {{ payment.amount_held|money }} 元（{{ payment.held_clusters }} 个主体） · 合计 {{ payment.amount_total|money }} 元</p>
   <div class="btn-row">
     <a class="btn" href="/api/export/master.csv" download>主数据 CSV</a>
     <a class="btn" href="/api/export/members.csv" download>成员分摊 CSV</a>
+    <a class="btn" href="/api/export/payment.csv" download>付款边界 CSV</a>
     <a class="btn" href="/api/export/quarantine.csv" download>隔离区 CSV</a>
     <a class="btn" href="/api/export/conflicts.csv" download>冲突 CSV</a>
     <a class="btn btn-ghost" href="/api/export/manifest.json" download>运行清单</a>

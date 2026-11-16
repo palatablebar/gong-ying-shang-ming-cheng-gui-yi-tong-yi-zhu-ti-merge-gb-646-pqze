@@ -27,7 +27,7 @@
     <div class="panel-num">{{ clusters|length }} 簇可见 · 合计 {{ ledger.amount_clusters|money }} 元</div>
   </div>
   <table class="tbl">
-    <thead><tr><th>主体</th><th>代表</th><th>税号</th><th class="w-city">城市</th><th class="num">成员</th><th class="num">累计(元)</th><th>状态</th><th>成员分摊</th><th class="spacer"></th></tr></thead>
+    <thead><tr><th>主体</th><th>代表</th><th>税号</th><th class="w-city">城市</th><th class="num">成员</th><th class="num">累计(元)</th><th>状态</th><th>付款状态</th><th>成员分摊</th><th class="spacer"></th></tr></thead>
     <tbody>
       {% for cluster in clusters %}
       <tr>
@@ -38,6 +38,10 @@
         <td class="num">{{ cluster.member_count }}</td>
         <td class="num">{{ cluster.total_amount|money }}</td>
         <td>{% if cluster.conflict %}<span class="tag tag-bad">税号冲突</span>{% elif cluster.member_count == 1 %}<span class="tag">单记录</span>{% else %}<span class="tag tag-ok">已合并</span>{% endif %}</td>
+        <td>
+          {% set pay = payment_status.get(cluster.cluster_id, {}) %}
+          {% if pay.status == '暂缓' %}<span class="tag tag-bad" title="{{ pay.pending_pairs|join(' ') }}">暂缓</span>{% for code in pay.hold_reasons %}<span class="sub mono">{{ code }}</span>{% endfor %}{% else %}<span class="tag tag-ok">可付</span>{% endif %}
+        </td>
         <td>
           <details class="fold">
             <summary>{{ cluster.member_count }} 条</summary>

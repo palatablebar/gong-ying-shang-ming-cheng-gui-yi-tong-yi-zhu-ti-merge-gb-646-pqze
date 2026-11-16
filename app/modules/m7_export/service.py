@@ -1,4 +1,4 @@
-"""M7 导出编排：主数据、成员分摊、隔离区、冲突、运行清单。"""
+"""M7 导出编排：主数据、成员分摊、隔离区、冲突、付款边界、运行清单。"""
 from __future__ import annotations
 
 import json
@@ -9,6 +9,8 @@ from ...manifest import build_manifest
 from ...reasons import code_table as reason_code_table
 from ...reasons import V_UNKNOWN_RUN
 from ..m5_clusters import service as cluster_service
+from ..m8_payment import payment_out
+from ..m8_payment import service as payment_service
 from . import manifest_out, master_out, quarantine_out
 
 
@@ -47,6 +49,13 @@ def conflicts_csv(run_id: str) -> str:
     return quarantine_out.render_conflicts(store.list_conflicts(run_id))
 
 
+def payment_csv(run_id: str) -> str:
+    run = store.get_run(run_id)
+    if not run:
+        raise NotFound(V_UNKNOWN_RUN, run_id)
+    return payment_out.render(payment_service.boundary(run_id))
+
+
 def manifest_json(run_id: str) -> str:
     run = store.get_run(run_id)
     if not run:
@@ -54,4 +63,5 @@ def manifest_json(run_id: str) -> str:
     cluster_service.ensure_clusters(run_id)
     ledger = cluster_service.reconcile(run_id)
     manifest = build_manifest(run, json.loads(run["files_json"]), ledger, reason_code_table())
+    manifest["payment"] = payment_service.summary(run_id)
     return manifest_out.render(manifest)

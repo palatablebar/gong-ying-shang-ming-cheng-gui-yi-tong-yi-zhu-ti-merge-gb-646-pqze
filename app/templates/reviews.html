@@ -34,6 +34,76 @@
 
 <section class="panel">
   <div class="panel-head">
+    <h2 class="panel-title">付款边界</h2>
+    <div class="panel-num">可付 {{ payment.summary.amount_payable|money }} · 暂缓 {{ payment.summary.amount_held|money }} · 合计 {{ payment.summary.amount_total|money }} 元</div>
+    <a class="btn btn-link" href="/api/payment" target="_blank" rel="noopener">JSON</a>
+  </div>
+  <p class="hint">整簇暂缓：簇内税号未核清或待核关系未决时整簇暂缓，暂缓金额留在付款账内分栏对账；复核决定落地后自动解除。</p>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>对账项</th><th class="num">左</th><th class="num">右</th><th>结论</th></tr></thead>
+    <tbody>
+      {% for check in payment.checks %}
+      <tr>
+        <td>{{ check.name }}</td>
+        <td class="num">{{ check.left }}</td>
+        <td class="num">{{ check.right }}</td>
+        <td><span class="tag {{ 'tag-ok' if check.ok else 'tag-bad' }}">{{ '通过' if check.ok else '异常' }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if payment.held %}
+  <table class="tbl">
+    <thead><tr><th>暂缓主体</th><th>代表</th><th>暂缓原因</th><th>待核对</th><th class="num">成员</th><th class="num">暂缓金额(元)</th><th>成员金额</th><th class="spacer"></th></tr></thead>
+    <tbody>
+      {% for cluster in payment.held %}
+      <tr>
+        <td class="mono">{{ cluster.cluster_id }}</td>
+        <td class="mono">{{ cluster.rep_id }}</td>
+        <td>{% for code in cluster.hold_reasons %}<span class="tag tag-bad">{{ reasons.get(code) }}</span>{% endfor %}</td>
+        <td class="mono">{{ cluster.pending_pairs|join(' ') or '—' }}</td>
+        <td class="num">{{ cluster.member_count }}</td>
+        <td class="num strong">{{ cluster.held_amount|money }}</td>
+        <td>
+          <details class="fold">
+            <summary>{{ cluster.member_count }} 条</summary>
+            <table class="tbl tbl-inner">
+              <tbody>
+                {% for member in cluster.members %}
+                <tr><td class="mono">{{ member.supplier_id }}</td><td class="num">{{ member.share_amount|money }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </details>
+        </td>
+        <td class="spacer"></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">没有暂缓主体，{{ payment.summary.payable_clusters }} 个主体全部可付。</p>
+  {% endif %}
+  <details class="fold">
+    <summary>可付主体 {{ payment.summary.payable_clusters }} 个 · 合计 {{ payment.summary.amount_payable|money }} 元</summary>
+    <table class="tbl tbl-inner">
+      <thead><tr><th>主体</th><th>代表</th><th class="num">成员</th><th class="num">可付金额(元)</th></tr></thead>
+      <tbody>
+        {% for cluster in payment.payable %}
+        <tr>
+          <td class="mono">{{ cluster.cluster_id }}</td>
+          <td class="mono">{{ cluster.rep_id }}</td>
+          <td class="num">{{ cluster.member_count }}</td>
+          <td class="num">{{ cluster.payable_amount|money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
     <h2 class="panel-title">引用异常</h2>
     <div class="panel-num">{{ references|length }} 条 · {{ stats.reference_codes|join(' ') }}</div>
   </div>

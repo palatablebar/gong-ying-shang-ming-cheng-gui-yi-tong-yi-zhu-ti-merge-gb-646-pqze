@@ -48,6 +48,13 @@ def export_conflicts():
                          f"conflicts-{run['run_id']}.csv")
 
 
+@router.get("/payment.csv")
+def export_payment():
+    run = intake_service.ensure_run()
+    return _csv_response(service.payment_csv(run["run_id"]),
+                         f"payment-{run['run_id']}.csv")
+
+
 @router.get("/manifest.json")
 def export_manifest():
     run = intake_service.ensure_run()

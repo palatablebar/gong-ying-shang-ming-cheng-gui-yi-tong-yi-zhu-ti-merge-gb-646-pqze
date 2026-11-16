@@ -19,6 +19,7 @@ from .modules.m4_pairs.handler import router as pair_router
 from .modules.m5_clusters.handler import router as cluster_router
 from .modules.m6_reviews.handler import router as review_router
 from .modules.m7_export.handler import router as export_router
+from .modules.m8_payment.handler import router as payment_router
 from .web import router as page_router
 
 
@@ -58,5 +59,5 @@ def health():
 
 
 for router in (intake_router, normalize_router, block_router, pair_router,
-               cluster_router, review_router, export_router, page_router):
+               cluster_router, review_router, export_router, payment_router, page_router):
     app.include_router(router)

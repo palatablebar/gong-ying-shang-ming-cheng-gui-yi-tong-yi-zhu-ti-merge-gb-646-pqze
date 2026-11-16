@@ -20,6 +20,7 @@ from .modules.m3_blocks import service as block_service
 from .modules.m4_pairs import service as pair_service
 from .modules.m5_clusters import service as cluster_service
 from .modules.m6_reviews import service as review_service
+from .modules.m8_payment import service as payment_service
 
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
@@ -202,6 +203,7 @@ def page_clusters(request: Request):
         "clusters": store.list_clusters(run_id)[:40],
         "members": by_cluster,
         "ledger": cluster_service.reconcile(run_id),
+        "payment_status": payment_service.status_map(run_id),
     })
     return render(request, "clusters.html", context)
 
@@ -218,6 +220,7 @@ def page_reviews(request: Request):
         "decisions": store.list_decisions(run_id)[:40],
         "references": review_service.reference_issues(run_id),
         "runs": run_briefs(8),
+        "payment": payment_service.boundary(run_id),
     })
     return render(request, "reviews.html", context)
 
@@ -233,5 +236,6 @@ def page_export(request: Request):
         "clusters": store.list_clusters(run_id)[:12],
         "quarantine": store.list_quarantine(run_id)[:12],
         "files": json.loads(run.get("files_json") or "[]"),
+        "payment": payment_service.summary(run_id),
     })
     return render(request, "export.html", context)
