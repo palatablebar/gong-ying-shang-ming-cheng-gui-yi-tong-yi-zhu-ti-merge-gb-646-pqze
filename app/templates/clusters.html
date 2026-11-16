@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="panel-head">
+    <h1 class="panel-title">合并簇</h1>
+    <div class="panel-num">{{ ledger.subjects }} 个主体 · 成员 {{ ledger.merged_members }} · 冲突簇 {{ ledger.conflict_clusters }}</div>
+    <button type="button" class="btn" data-action="rebuild-clusters">重建</button>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>对账项</th><th class="num">左</th><th class="num">右</th><th>结论</th></tr></thead>
+    <tbody>
+      {% for check in ledger.checks %}
+      <tr>
+        <td>{{ check.name }}</td>
+        <td class="num">{{ check.left }}</td>
+        <td class="num">{{ check.right }}</td>
+        <td><span class="tag {{ 'tag-ok' if check.ok else 'tag-bad' }}">{{ '通过' if check.ok else '异常' }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">簇明细</h2>
+    <div class="panel-num">{{ clusters|length }} 簇可见 · 合计 {{ ledger.amount_clusters|money }} 元</div>
+  </div>
+  <table class="tbl">
+    <thead><tr><th>主体</th><th>代表</th><th>税号</th><th class="w-city">城市</th><th class="num">成员</th><th class="num">累计(元)</th><th>状态</th><th>成员分摊</th><th class="spacer"></th></tr></thead>
+    <tbody>
+      {% for cluster in clusters %}
+      <tr>
+        <td class="mono">{{ cluster.cluster_id }}</td>
+        <td class="mono">{{ cluster.rep_id }}</td>
+        <td class="mono">{{ cluster.tax_id or '—' }}</td>
+        <td class="w-city">{{ cluster.city }}</td>
+        <td class="num">{{ cluster.member_count }}</td>
+        <td class="num">{{ cluster.total_amount|money }}</td>
+        <td>{% if cluster.conflict %}<span class="tag tag-bad">税号冲突</span>{% elif cluster.member_count == 1 %}<span class="tag">单记录</span>{% else %}<span class="tag tag-ok">已合并</span>{% endif %}</td>
+        <td>
+          <details class="fold">
+            <summary>{{ cluster.member_count }} 条</summary>
+            <table class="tbl tbl-inner">
+              <tbody>
+                {% for member in members.get(cluster.cluster_id, []) %}
+                <tr><td class="mono">{{ member.supplier_id }}</td><td class="num">{{ member.share_amount|money }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </details>
+        </td>
+        <td class="spacer"></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

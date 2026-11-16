@@ -1,0 +1,32 @@
+/* L8 政企台账：冷蓝灰底、公文蓝主色、方角、黑体正文 + 宋体落款。 */
+:root {
+  --bg: #eef2f6;
+  --bg-strip: #e4eaf1;
+  --surface: #fbfcfe;
+  --surface-2: #f2f6fa;
+  --ink: #16232f;
+  --ink-muted: #5a6b7b;
+  --ink-faint: #7f8f9e;
+  --line: #ccd7e1;
+  --line-strong: #a7b9c9;
+  --accent: #1f4e79;
+  --accent-soft: #d7e3ef;
+  --accent-ink: #ffffff;
+  --ok: #1f6b47;
+  --ok-soft: #dcece3;
+  --warn: #8a5a00;
+  --warn-soft: #f6e8cc;
+  --bad: #9d2b23;
+  --bad-soft: #f6ddda;
+  --info: #2b5f8f;
+  --font-ui: "Heiti SC", "SimHei", "Microsoft YaHei", sans-serif;
+  --font-doc: "Songti SC", "SimSun", "STSong", serif;
+  --font-num: "SFMono-Regular", ui-monospace, "Menlo", "Consolas", monospace;
+  --radius: 0px;
+  --radius-sm: 0px;
+  --pad: 10px;
+  --gap: 12px;
+  --row: 27px;
+  --shadow: none;
+  --sheet: 1600px;
+}

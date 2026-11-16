@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="panel-head">
+    <h1 class="panel-title">台账总览</h1>
+    <div class="panel-num">{{ ledger.accepted }} 条 · {{ ledger.subjects }} 个主体 · 合计 {{ ledger.amount_clusters|money }} 元</div>
+  </div>
+  <div class="grid-two">
+    <table class="tbl tbl-tight">
+      <thead><tr><th>项目</th><th class="num">数值</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>采信行数</td><td class="num">{{ ledger.input_rows|intcomma }}</td><td>含隔离与冲突</td></tr>
+        <tr><td>采纳记录</td><td class="num">{{ ledger.accepted|intcomma }}</td><td>去重后</td></tr>
+        <tr><td>隔离行</td><td class="num">{{ ledger.quarantined|intcomma }}</td><td>见下方诊断</td></tr>
+        <tr><td>同号冲突</td><td class="num">{{ ledger.conflicts|intcomma }}</td><td>保留先到</td></tr>
+        <tr><td>合并成员</td><td class="num">{{ ledger.merged_members|intcomma }}</td><td>并入代表</td></tr>
+        <tr><td>金额合计</td><td class="num">{{ ledger.amount_clusters|money }}</td><td>元</td></tr>
+      </tbody>
+    </table>
+    <table class="tbl tbl-tight">
+      <thead><tr><th>对账项</th><th class="num">左</th><th class="num">右</th><th>结论</th></tr></thead>
+      <tbody>
+        {% for check in ledger.checks %}
+        <tr>
+          <td>{{ check.name }}</td>
+          <td class="num">{{ check.left }}</td>
+          <td class="num">{{ check.right }}</td>
+          <td><span class="tag {{ 'tag-ok' if check.ok else 'tag-bad' }}">{{ '通过' if check.ok else '异常' }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn" data-action="rebuild-clusters">重建合并簇</button>
+    <button type="button" class="btn" data-action="reimport">重新采信</button>
+    <a class="btn btn-link" href="/export">导出</a>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">候选对分布</h2>
+    <div class="panel-num">{{ ledger.bands.auto }} 自动 · {{ ledger.bands.review }} 复核 · {{ ledger.bands.reject }} 拒绝</div>
+  </div>
+  {% set bands_total = (ledger.bands.auto + ledger.bands.review + ledger.bands.reject) or 1 %}
+  <div class="band-bar" data-bars>
+    <span class="band band-auto" data-value="{{ ledger.bands.auto * 100 / bands_total }}" title="自动 {{ ledger.bands.auto }}"></span>
+    <span class="band band-review" data-value="{{ ledger.bands.review * 100 / bands_total }}" title="复核 {{ ledger.bands.review }}"></span>
+    <span class="band band-reject" data-value="{{ ledger.bands.reject * 100 / bands_total }}" title="拒绝 {{ ledger.bands.reject }}"></span>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>候选对</th><th>左</th><th>右</th><th class="num">得分</th><th>结论</th><th>原因码</th></tr></thead>
+    <tbody>
+      {% for pair in pairs %}
+      <tr>
+        <td class="mono">{{ pair.pair_id }}</td>
+        <td class="mono">{{ pair.left_id }}</td>
+        <td class="mono">{{ pair.right_id }}</td>
+        <td class="num">{{ pair.score|score }}</td>
+        <td><span class="tag tag-{{ pair.verdict }}">{{ verdicts.get(pair.verdict) }}</span></td>
+        <td>{{ reasons.get(pair.reason_code) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">合并簇</h2>
+    <div class="panel-num">{{ summary.clusters }} 个 · 冲突 {{ summary.conflict_clusters }}</div>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>主体</th><th>代表</th><th>税号</th><th>城市</th><th class="num">成员</th><th class="num">累计(元)</th><th>状态</th></tr></thead>
+    <tbody>
+      {% for cluster in clusters %}
+      <tr>
+        <td class="mono">{{ cluster.cluster_id }}</td>
+        <td>{{ cluster.rep_id }}</td>
+        <td class="mono">{{ cluster.tax_id or '—' }}</td>
+        <td>{{ cluster.city }}</td>
+        <td class="num">{{ cluster.member_count }}</td>
+        <td class="num">{{ cluster.total_amount|money }}</td>
+        <td>{% if cluster.conflict %}<span class="tag tag-bad">税号冲突</span>{% else %}<span class="tag tag-ok">一致</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">采信诊断</h2>
+    <div class="panel-num">{{ counts.files }} 个文件 · {{ counts.input_rows }} 行 · 采纳 {{ counts.accepted }}</div>
+    <a class="btn btn-link" href="/api/suppliers/import" target="_blank" rel="noopener">接口</a>
+  </div>
+  <table class="tbl tbl-dense">
+    <thead><tr><th>文件</th><th>编码</th><th>BOM</th><th class="num">分段</th><th class="num">数据行</th><th class="num">采纳</th><th class="num">隔离</th><th>空态</th><th>sha256</th></tr></thead>
+    <tbody>
+      {% for file in diagnostics %}
+      <tr>
+        <td class="mono">{{ file.name }}</td>
+        <td>{{ file.encoding }}</td>
+        <td>{{ '有' if file.bom_removed else '无' }}</td>
+        <td class="num">{{ file.segments }}</td>
+        <td class="num">{{ file.data_rows }}</td>
+        <td class="num">{{ file.accepted }}</td>
+        <td class="num">{{ file.quarantined }}</td>
+        <td>{% if file.empty_state %}<span class="tag tag-warn">{{ empty_states.get(file.empty_state) }}</span>{% else %}<span class="tag tag-ok">正常</span>{% endif %}</td>
+        <td class="mono clip" title="{{ file.sha256 }}">{{ file.sha256[:16] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">隔离与冲突</h2>
+    <div class="panel-num">{{ counts.quarantined }} 行隔离 · {{ counts.conflicts }} 条冲突</div>
+    <a class="btn btn-link" href="/api/export/quarantine.csv" download>导出隔离区</a>
+  </div>
+  <div class="grid-two">
+    <table class="tbl tbl-tight">
+      <thead><tr><th>文件</th><th class="num">行号</th><th>原因码</th><th>原因</th><th>原值</th></tr></thead>
+      <tbody>
+        {% for row in quarantine %}
+        <tr>
+          <td class="mono">{{ row.source_file }}</td>
+          <td class="num">{{ row.line_no }}</td>
+          <td class="mono">{{ row.reason_code }}</td>
+          <td>{{ reasons.get(row.reason_code) }}</td>
+          <td class="mono clip" title="{{ row.raw_line }}">{{ row.raw_line[:32] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <table class="tbl tbl-tight">
+      <thead><tr><th>供应商号</th><th>差异字段</th><th>保留</th><th>剔除</th></tr></thead>
+      <tbody>
+        {% for row in conflicts %}
+        <tr>
+          <td class="mono">{{ row.supplier_id }}</td>
+          <td>{{ row.field }}</td>
+          <td class="mono">{{ row.kept }}</td>
+          <td class="mono">{{ row.rejected }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">采纳记录</h2>
+    <div class="panel-num">前 {{ records|length }} 条 · 共 {{ counts.accepted }}</div>
+  </div>
+  <table class="tbl tbl-dense">
+    <thead><tr><th>供应商号</th><th>编码</th><th>名称</th><th>税号</th><th>城市</th><th>来源</th><th class="num">累计(元)</th><th>标记</th></tr></thead>
+    <tbody>
+      {% for row in records %}
+      <tr>
+        <td class="mono">{{ row.supplier_id }}</td>
+        <td class="mono">{{ row.supplier_no }}</td>
+        <td class="clip" title="{{ row.raw_name }}">{{ row.raw_name }}</td>
+        <td class="mono">{{ row.tax_id or '—' }}</td>
+        <td>{{ row.city }}</td>
+        <td>{{ row.erp }}</td>
+        <td class="num">{{ row.ytd_amount|money }}</td>
+        <td class="mono">{{ row.flags }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">批次</h2>
+    <div class="panel-num">{{ runs|length }} 次运行</div>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>批次号</th><th>时间</th><th class="num">采信</th><th class="num">采纳</th><th class="num">隔离</th><th class="num">耗时(ms)</th></tr></thead>
+    <tbody>
+      {% for item in runs %}
+      <tr>
+        <td class="mono">{{ item.run_id }}</td>
+        <td>{{ item.created_at|ts }}</td>
+        <td class="num">{{ item.input_rows }}</td>
+        <td class="num">{{ item.accepted }}</td>
+        <td class="num">{{ item.quarantined }}</td>
+        <td class="num">{{ item.elapsed_ms }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

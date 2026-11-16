@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="panel-head">
+    <h1 class="panel-title">名称归一</h1>
+    <div class="panel-num">{{ summary.total }} 条 · 变更 {{ summary.changed }} · 去重后 {{ summary.distinct }} 种</div>
+  </div>
+  <div class="grid-two">
+    <table class="tbl tbl-tight">
+      <thead><tr><th>规则</th><th>编号</th><th class="num">命中</th></tr></thead>
+      <tbody>
+        {% for rule in summary.rule_hits %}
+        <tr>
+          <td>{{ rule.label }}</td>
+          <td class="mono">{{ rule.code }}</td>
+          <td class="num">{{ rule.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form class="form" data-preview-form>
+      <label class="field">
+        <span class="field-label">试算名称</span>
+        <input class="input" name="name" value="鼎新科技〔北京〕有限公司" maxlength="120" required>
+      </label>
+      <button type="submit" class="btn">试算</button>
+      <output class="output mono" data-preview-output>等待试算</output>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">归一对照</h2>
+    <div class="panel-num">前 {{ records|length }} 条</div>
+  </div>
+  <table class="tbl tbl-dense">
+    <thead><tr><th>供应商号</th><th>原名</th><th>归一后</th><th>规则编号</th><th class="num">原名长度</th><th class="num">归一名长度</th></tr></thead>
+    <tbody>
+      {% for row in records %}
+      <tr>
+        <td class="mono">{{ row.supplier_id }}</td>
+        <td class="clip" title="{{ row.raw_name }}">{{ row.raw_name }}</td>
+        <td class="clip strong" title="{{ row.norm_name }}">{{ row.norm_name }}</td>
+        <td class="mono">{{ row.norm_codes }}</td>
+        <td class="num">{{ row.raw_name|length }}</td>
+        <td class="num">{{ row.norm_name|length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

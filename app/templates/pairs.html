@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="panel-head">
+    <h1 class="panel-title">候选对</h1>
+    <div class="panel-num">{{ stats.total }} 对 · 自动 {{ stats.auto }} · 复核 {{ stats.review }} · 拒绝 {{ stats.reject }}</div>
+    <div class="seg" data-filter-group="verdict">
+      <button type="button" class="seg-btn seg-on" data-filter="all">全部</button>
+      <button type="button" class="seg-btn" data-filter="auto">自动</button>
+      <button type="button" class="seg-btn" data-filter="review">复核</button>
+      <button type="button" class="seg-btn" data-filter="reject">拒绝</button>
+    </div>
+  </div>
+  <div class="grid-two">
+    <table class="tbl tbl-tight">
+      <thead><tr><th>阈值</th><th class="num">值</th></tr></thead>
+      <tbody>
+        <tr><td>自动合并下限</td><td class="num">{{ stats.thresholds.auto }}</td></tr>
+        <tr><td>复核下限</td><td class="num">{{ stats.thresholds.review }}</td></tr>
+        <tr><td>bigram 权重</td><td class="num">{{ stats.thresholds.weights.dice }}</td></tr>
+        <tr><td>编辑比率权重</td><td class="num">{{ stats.thresholds.weights.ratio }}</td></tr>
+        <tr><td>最高分</td><td class="num">{{ stats.max_score|score }}</td></tr>
+        <tr><td>最低分</td><td class="num">{{ stats.min_score|score }}</td></tr>
+      </tbody>
+    </table>
+    <table class="tbl tbl-tight">
+      <thead><tr><th>分块桶</th><th class="num">成员</th></tr></thead>
+      <tbody>
+        {% for block in blocks %}
+        <tr><td class="mono">{{ block.block_key }}</td><td class="num">{{ block.member_count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="stat-line">桶 {{ block_summary.block_count }} · 候选 {{ block_summary.pair_count }} · 最大桶 {{ block_summary.max_block }} · 截断 {{ block_summary.truncated_pairs }}</div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">得分明细</h2>
+    <div class="panel-num">前 {{ pairs|length }} 对</div>
+  </div>
+  <table class="tbl tbl-dense" data-filter-table>
+    <thead><tr><th>候选对</th><th>左侧</th><th>右侧</th><th class="num">bigram</th><th class="num">比率</th><th class="num">得分</th><th>结论</th><th>原因码</th><th>依据</th></tr></thead>
+    <tbody>
+      {% for pair in pairs %}
+      <tr data-verdict="{{ pair.verdict }}">
+        <td class="mono">{{ pair.pair_id }}</td>
+        <td class="clip" title="{{ pair.left_name }}">{{ pair.left_id }} {{ pair.left_name }}</td>
+        <td class="clip" title="{{ pair.right_name }}">{{ pair.right_id }} {{ pair.right_name }}</td>
+        <td class="num">{{ pair.dice|score }}</td>
+        <td class="num">{{ pair.ratio|score }}</td>
+        <td class="num strong">{{ pair.score|score }}</td>
+        <td><span class="tag tag-{{ pair.verdict }}">{{ verdicts.get(pair.verdict) }}</span></td>
+        <td>{{ reasons.get(pair.reason_code) }}</td>
+        <td class="mono clip" title="{{ pair.detail }}">{{ pair.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

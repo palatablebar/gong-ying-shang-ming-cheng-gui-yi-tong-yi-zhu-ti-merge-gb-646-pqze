@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    image: gb-646-entitymerge:latest
+    container_name: gb-646-entitymerge
+    ports:
+      - "18205:8000"
+    environment:
+      MERGE_DB: /srv/data/merge.db
+      TZ: Asia/Shanghai
+    volumes:
+      - merge-data:/srv/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+volumes:
+  merge-data:

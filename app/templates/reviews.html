@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="panel-head">
+    <h1 class="panel-title">复核队列</h1>
+    <div class="panel-num">{{ stats.total }} 项 · 待判 {{ stats.pending }} · 已判 {{ stats.decided }}</div>
+    <a class="btn btn-link" href="/api/reviews/history" target="_blank" rel="noopener">时间窗</a>
+  </div>
+  {% if queue %}
+  <table class="tbl">
+    <thead><tr><th>候选对</th><th>左侧</th><th>右侧</th><th class="num">得分</th><th>原因码</th><th class="num">版本</th><th>当前</th><th>判定</th></tr></thead>
+    <tbody>
+      {% for item in queue %}
+      <tr>
+        <td class="mono">{{ item.pair_id }}</td>
+        <td class="clip" title="{{ item.left_name }}">{{ item.left_id }} {{ item.left_name }}<span class="sub mono">{{ item.left_tax or '无税号' }} · {{ item.left_city or '—' }}</span></td>
+        <td class="clip" title="{{ item.right_name }}">{{ item.right_id }} {{ item.right_name }}<span class="sub mono">{{ item.right_tax or '无税号' }} · {{ item.right_city or '—' }}</span></td>
+        <td class="num strong">{{ item.score|score }}</td>
+        <td>{{ reasons.get(item.reason_code) }}</td>
+        <td class="num">{{ item.version }}</td>
+        <td>{{ '合并' if item.decision == 'merge' else ('保留' if item.decision == 'keep' else '—') }}</td>
+        <td class="btn-cell">
+          <button type="button" class="btn btn-sm" data-decision="merge" data-pair="{{ item.pair_id }}" data-version="{{ item.version }}">合并</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-decision="keep" data-pair="{{ item.pair_id }}" data-version="{{ item.version }}">保留</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">没有待复核项。</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">引用异常</h2>
+    <div class="panel-num">{{ references|length }} 条 · {{ stats.reference_codes|join(' ') }}</div>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>供应商号</th><th>声明主档</th><th>原因码</th><th>原因</th><th>证据</th><th class="num">行号</th></tr></thead>
+    <tbody>
+      {% for item in references %}
+      <tr>
+        <td class="mono">{{ item.supplier_id }}</td>
+        <td class="mono">{{ item.ref_master_id }}</td>
+        <td class="mono">{{ item.reason_code }}</td>
+        <td>{{ reasons.get(item.reason_code) }}</td>
+        <td class="mono">{{ item.detail }}</td>
+        <td class="num">{{ item.line_no }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">判定记录</h2>
+    <div class="panel-num">{{ decisions|length }} 条</div>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>候选对</th><th>动作</th><th class="num">旧版</th><th class="num">新版</th><th>操作人</th><th>时间</th></tr></thead>
+    <tbody>
+      {% for item in decisions %}
+      <tr>
+        <td class="mono">{{ item.pair_id }}</td>
+        <td>{{ '合并' if item.decision == 'merge' else '保留' }}</td>
+        <td class="num">{{ item.expected_version }}</td>
+        <td class="num">{{ item.version }}</td>
+        <td>{{ item.operator }}</td>
+        <td>{{ item.decided_at|ts }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if not decisions %}<p class="empty">还没有判定记录。</p>{% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">批次清单</h2>
+    <div class="panel-num">{{ runs|length }} 次</div>
+  </div>
+  <table class="tbl tbl-tight">
+    <thead><tr><th>批次号</th><th>时间</th><th class="num">采信</th><th class="num">采纳</th><th class="num">隔离</th><th class="num">耗时(ms)</th></tr></thead>
+    <tbody>
+      {% for item in runs %}
+      <tr>
+        <td class="mono">{{ item.run_id }}</td>
+        <td>{{ item.created_at|ts }}</td>
+        <td class="num">{{ item.input_rows }}</td>
+        <td class="num">{{ item.accepted }}</td>
+        <td class="num">{{ item.quarantined }}</td>
+        <td class="num">{{ item.elapsed_ms }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

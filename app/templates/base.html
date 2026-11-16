@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} · {{ app_name }}</title>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/layout.css">
+<link rel="stylesheet" href="/static/components.css">
+</head>
+<body class="gov">
+<header class="topbar">
+  <div class="topbar-brand">{{ app_name }}</div>
+  <div class="topbar-meta">
+    <span class="stamp">批次 {{ run.run_id }}</span>
+    <span class="stamp">规则 {{ rule_version }}</span>
+    <span class="stamp">{{ tz_label }}</span>
+  </div>
+  <button type="button" class="btn btn-ghost" data-print>打印</button>
+</header>
+<nav class="tabs" aria-label="主菜单">
+  {% for key, label, href in nav %}
+  <a class="tab{% if page == key %} tab-on{% endif %}" href="{{ href }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+<div class="crumbs"><span>主数据</span><span class="sep">/</span><span>{{ title }}</span>
+  <span class="crumbs-right">{{ run.created_at|ts }}</span></div>
+<div class="banner" id="banner" hidden></div>
+<main class="sheet">
+{% block body %}{% endblock %}
+</main>
+<footer class="signoff">
+  <span>制表 集团采购中心</span>
+  <span>审核 主数据组</span>
+  <span>日期 {{ run.created_at|date_only }}</span>
+</footer>
+<script src="/static/app.js"></script>
+<script src="/static/table.js"></script>
+<script src="/static/charts.js"></script>
+</body>
+</html>
